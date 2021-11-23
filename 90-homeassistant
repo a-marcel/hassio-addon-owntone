@@ -1,0 +1,223 @@
+#!/bin/bash
+
+if [ ! -d "/share/owntone" ]; then
+  mkdir -p /share/owntone
+fi
+
+if [ ! -d "/share/owntone/dbase_and_logs" ]; then
+  mkdir -p /share/owntone/dbase_and_logs
+fi
+
+if [ ! -d "/share/owntone/music" ]; then
+  mkdir /share/owntone/music
+fi
+
+chown -R abc:abc /share/owntone/dbase_and_logs /share/owntone /share/owntone/music
+
+
+OPTIONS_PATH=/data/options.json
+CONFIG_PATH=/etc/owntone.conf
+
+cp /defaults/owntone.conf $CONFIG_PATH
+
+# General
+
+PASSWORD=$(jq -j --raw-output '.general.admin_password // empty' $OPTIONS_PATH)
+
+if [ ! -z "$PASSWORD" ]; then
+	sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*admin_password = .*/admin_password = \"${PASSWORD}\"/" $CONFIG_PATH
+fi
+
+TRUSTED_NETWORKS=$(jq -j --raw-output '.general.trusted_networks // empty | join("\",\"")' $OPTIONS_PATH)
+
+if [ ! -z "$TRUSTED_NETWORKS" ]; then
+	sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*trusted_networks = .*/trusted_networks = { \"${TRUSTED_NETWORKS}\" }/" $CONFIG_PATH
+fi
+
+LOGLEVEL=$(jq -j --raw-output '.general.loglevel // empty' $OPTIONS_PATH)
+
+if [ ! -z "$LOGLEVEL" ]; then
+	sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*loglevel = .*/loglevel = \"${LOGLEVEL}\"/" $CONFIG_PATH
+fi
+
+# Library
+LIBRARY=$(jq -j --raw-output '.library? | length' $OPTIONS_PATH)
+if [ ! -z $LIBRARY ] && [ "$LIBRARY" -ge "1" ]; then
+	LIB_NAME=$(jq -j --raw-output '.library.name // empty' $OPTIONS_PATH)
+	if [ ! -z "$LIB_NAME" ]; then
+		sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*name = .*/name = \"${LIB_NAME}\"/" $CONFIG_PATH
+	fi
+
+	PASSWORD=$(jq -j --raw-output '.library.password // empty' $OPTIONS_PATH)
+	if [ ! -z "$PASSWORD" ]; then
+		sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*password = .*/password = \"${PASSWORD}\"/" $CONFIG_PATH
+	fi
+
+	M3U_OVERRIDES=$(jq -j --raw-output '.library.m3u_overrides // empty' $OPTIONS_PATH)
+	if [ ! -z "$M3U_OVERRIDES" ]; then
+		sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*m3u_overrides = .*/m3u_overrides = ${M3U_OVERRIDES}/" $CONFIG_PATH
+	fi
+
+	ITUNES_OVERRIDES=$(jq -j --raw-output '.library.itunes_overrides // empty' $OPTIONS_PATH)
+	if [ ! -z "$ITUNES_OVERRIDES" ]; then
+		sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*itunes_overrides = .*/itunes_overrides = ${ITUNES_OVERRIDES}/" $CONFIG_PATH
+	fi
+
+	ITUNES_SMARTPL=$(jq -j --raw-output '.library.itunes_smartpl // empty' $OPTIONS_PATH)
+	if [ ! -z "$ITUNES_SMARTPL" ]; then
+		sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*itunes_smartpl = .*/itunes_smartpl = ${ITUNES_SMARTPL}/" $CONFIG_PATH
+	fi
+
+fi
+
+# Spotify
+SPOTIFY=$(jq -j --raw-output '.spotify.use_libspotify // empty' $OPTIONS_PATH)
+if [ ! -z "$SPOTIFY" ] && [ "$SPOTIFY" = "true" ]; then
+
+	sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*use_libspotify = .*/use_libspotify = ${SPOTIFY}/" $CONFIG_PATH
+
+	SETTINGS_DIR=$(jq -j --raw-output '.spotify.settings_dir // empty' $OPTIONS_PATH)
+	if [ ! -z "$SETTINGS_DIR" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*settings_dir = .*/settings_dir = \"${SETTINGS_DIR}\"/" $CONFIG_PATH
+	fi
+
+	CACHE_DIR=$(jq -j --raw-output '.spotify.cache_dir // empty' $OPTIONS_PATH)
+	if [ ! -z "$CACHE_DIR" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*cache_dir = .*/cache_dir = \"${CACHE_DIR}\"/" $CONFIG_PATH
+	fi
+
+	BITRATE=$(jq -j --raw-output '.spotify.bitrate // empty' $OPTIONS_PATH)
+	if [ ! -z "$BITRATE" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*bitrate = .*/bitrate = ${BITRATE}/" $CONFIG_PATH
+	fi
+
+	BASE_PLAYLIST_DISABLE=$(jq -j --raw-output '.spotify.base_playlist_disable // empty' $OPTIONS_PATH)
+	if [ ! -z "$BASE_PLAYLIST_DISABLE" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*base_playlist_disable = .*/base_playlist_disable = ${BASE_PLAYLIST_DISABLE}/" $CONFIG_PATH
+	fi
+
+	ALBUM_OVERRIDE=$(jq -j --raw-output '.spotify.album_override // empty' $OPTIONS_PATH)
+	if [ ! -z "$ALBUM_OVERRIDE" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*album_override = .*/album_override = ${ALBUM_OVERRIDE}/" $CONFIG_PATH
+	fi
+
+	ARTIST_OVERRIDE=$(jq -j --raw-output '.spotify.artist_override // empty' $OPTIONS_PATH)
+	if [ ! -z "$ARTIST_OVERRIDE" ]; then
+		sed -i -e "/^#\?spotify {$/,/^#\?}$/s/^#\?\s*artist_override = .*/artist_override = ${ARTIST_OVERRIDE}/" $CONFIG_PATH
+	fi
+
+else
+	sed -i -e "/^#\?spotify {$/,/^#\?\}$/d" $CONFIG_PATH
+fi;
+
+# ChromeCast 
+CHROMECAST_DEVICES=$(jq -j --raw-output '.chromecast[]? | length' $OPTIONS_PATH)
+
+if [ ! -z $CHROMECAST_DEVICES ] && [ "$CHROMECAST_DEVICES" -ge "1" ]; then
+	sed -i -e '/^#\?chromecast "[^"]*".*$/,/^#\?\}$/d' $CONFIG_PATH
+
+	for k in $(jq '.chromecast | keys | .[]' $OPTIONS_PATH); do
+		CHROMECAST_NAME=$(jq -j --raw-output ".chromecast[$k] .name // empty" $OPTIONS_PATH)
+		CHROMECAST_MAX_VOLUME=$(jq -j --raw-output ".chromecast[$k] .max_volume // empty" $OPTIONS_PATH)
+		CHROMECAST_NICKNAME=$(jq -j --raw-output ".chromecast[$k] .nickname // empty" $OPTIONS_PATH)
+		CHROMECAST_EXCLUDE=$(jq -j --raw-output ".chromecast[$k] .exclude // empty" $OPTIONS_PATH)
+
+		if [ ! -z "$CHROMECAST_NAME" ]; then
+			if [ ! -z "$CHROMECAST_NICKNAME" ]; then
+                                CHROMECAST_NICKNAME="nickname = \"$CHROMECAST_NICKNAME\""
+                        else
+                                CHROMECAST_NICKNAME=""
+                        fi
+
+			if [ ! -z "$CHROMECAST_EXCLUDE" ] && [ "$CHROMECAST_EXCLUDE" = "true" ]; then
+                                CHROMECAST_EXCLUDE="exclude = true"
+                        else
+                                CHROMECAST_EXCLUDE="exclude = false"
+                        fi
+
+			if [ ! -z "$CHROMECAST_MAX_VOLUME" ] && [ "$CHROMECAST_MAX_VOLUME" -ge "0" ]; then
+                                CHROMECAST_MAX_VOLUME="max_volume = $CHROMECAST_MAX_VOLUME"
+                        else
+                                CHROMECAST_MAX_VOLUME=""
+                        fi
+
+                        echo "chromecast \"$CHROMECAST_NAME\" {
+                                $CHROMECAST_NICKNAME
+                                $CHROMECAST_EXCLUDE
+                                $CHROMECAST_MAX_VOLUME
+                        }" >> $CONFIG_PATH
+
+		fi
+
+	done
+fi;
+
+# AirPlay
+
+AIRPLAY_DEVICES=$(jq -j --raw-output '.airplay[]? | length' $OPTIONS_PATH)
+
+if [ ! -z $AIRPLAY_DEVICES ] && [ "$AIRPLAY_DEVICES" -ge "1" ]; then
+	sed -i -e '/^#\?airplay "[^"]*".*$/,/^#\?\}$/d' $CONFIG_PATH
+
+	for k in $(jq '.airplay | keys | .[]' $OPTIONS_PATH); do
+		AIRPLAY_NAME=$(jq -j --raw-output ".airplay[$k] .name // empty" $OPTIONS_PATH)
+		AIRPLAY_MAX_VOLUME=$(jq -j --raw-output ".airplay[$k] .max_volume // empty" $OPTIONS_PATH)
+		AIRPLAY_PERMANENT=$(jq -j --raw-output ".airplay[$k] .permanent // empty" $OPTIONS_PATH)
+		AIRPLAY_RAOP_DISABLE=$(jq -j --raw-output ".airplay[$k] .raop_disable // empty" $OPTIONS_PATH)
+		AIRPLAY_NICKNAME=$(jq -j --raw-output ".airplay[$k] .nickname // empty" $OPTIONS_PATH)
+		AIRPLAY_PASSWORD=$(jq -j --raw-output ".airplay[$k] .password // empty" $OPTIONS_PATH)
+		AIRPLAY_EXCLUDE=$(jq -j --raw-output ".airplay[$k] .exclude // empty" $OPTIONS_PATH)
+
+
+		if [ ! -z "$AIRPLAY_NAME" ]; then
+
+			if [ ! -z "$AIRPLAY_PERMANENT" ] && [ "$AIRPLAY_PERMANENT" = "true" ]; then
+				AIRPLAY_PERMANENT="permanent = true"
+			else
+				AIRPLAY_PERMANENT="permanent = false"
+			fi
+
+			if [ ! -z "$AIRPLAY_RAOP_DISABLE" ] && [ "$AIRPLAY_RAOP_DISABLE" = "true" ]; then
+                                AIRPLAY_RAOP_DISABLE="raop_disable = true"
+                        else
+                                AIRPLAY_RAOP_DISABLE="raop_disable = false"
+                        fi
+
+			if [ ! -z "$AIRPLAY_NICKNAME" ]; then
+				AIRPLAY_NICKNAME="nickname = \"$AIRPLAY_NICKNAME\""
+			else
+				AIRPLAY_NICKNAME=""
+			fi
+
+			if [ ! -z "$AIRPLAY_PASSWORD" ]; then
+				AIRPLAY_PASSWORD="password = \"$AIRPLAY_PASSWORD\""
+			else
+				AIRPLAY_PASSWORD=""
+			fi
+
+			if [ ! -z "$AIRPLAY_EXCLUDE" ] && [ "$AIRPLAY_EXCLUDE" = "true" ]; then
+				AIRPLAY_EXCLUDE="exclude = true"
+			else
+				AIRPLAY_EXCLUDE="exclude = false"
+			fi
+
+			if [ ! -z "$AIRPLAY_MAX_VOLUME" ] && [ "$AIRPLAY_MAX_VOLUME" -ge "0" ]; then
+                                AIRPLAY_MAX_VOLUME="max_volume = $AIRPLAY_MAX_VOLUME"
+                        else
+                                AIRPLAY_MAX_VOLUME=""
+                        fi
+
+			echo "airplay \"$AIRPLAY_NAME\" {
+				$AIRPLAY_PERMANENT
+				$AIRPLAY_NICKNAME
+				$AIRPLAY_EXCLUDE
+				$AIRPLAY_PASSWORD
+				$AIRPLAY_RAOP_DISABLE
+				$AIRPLAY_MAX_VOLUME
+			}" >> $CONFIG_PATH
+		fi;
+
+	done
+fi
+
+

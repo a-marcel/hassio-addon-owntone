@@ -1,0 +1,100 @@
+name: Owntone server
+version: 28.2.20211118
+slug: owntone-server
+description: OwnTone is a Linux/FreeBSD DAAP (iTunes) media server with support for AirPlay devices, Apple Remote (and compatibles), MPD, Spotify, Chromecast, mp3 streaming and internet radio. It allows you to share your music collection over the local network.
+arch:
+  - armv7
+  - aarch64
+  - amd64
+ports:
+  3688/tcp: 3688
+  6600/tcp: 6600
+  5353/tcp: 5353
+  3689/tcp: 3689
+  3690/udp: 3690
+  3691/udp: 3691
+
+ports_description:
+  3688/tcp: Websockets
+  6600/tcp: MPD
+  5353/tcp: Avahi
+  3689/tcp: DAAP
+  3690/udp: Control port - Airplay
+  3691/udp: Timing port - Airplay
+map:
+#  - config:rw
+#  - media:rw
+  - share:rw
+host_network: false
+host_dbus: false
+host_ipc: false
+ingress: true
+hassio_api: false
+auth_api: true
+hassio_role: "default"
+audio: true
+ingress_port: 3689
+webui: http://[HOST]:[PORT:3689]/
+startup: application
+boot: auto
+#image: linuxserver/daapd
+options: 
+  general:
+    admin_password: ''
+    loglevel: log
+    trusted_networks:
+      - 'localhost'
+      - '192.168'
+      - '172.17'
+      - '172.30'
+  library:
+    name: 'Hassio music'
+    password: ''
+    m3u_overrides: false
+    itunes_overrides: false
+    itunes_smartpl: false
+  airplay: []
+  chromecast: []
+  spotify:
+    use_libspotify: false
+    settings_dir: "/share/owntone/libspotify"
+    cache_dir: "/tmp"
+    bitrate: 0
+    base_playlist_disable: false
+    artist_override: false
+    album_override: false
+
+schema:
+  general:
+    admin_password: password?
+    loglevel: str
+    trusted_networks: [str]
+  library:
+    name: str
+    password: password?
+    m3u_overrides: bool?
+    itunes_overrides: bool?
+    itunes_smartpl: bool?
+  airplay:
+    - name: str
+      max_volume: int?
+      permanent: bool?
+      exclude: bool?
+      password: password?
+      raop_disable: bool?
+      nickname: str?
+
+  spotify:
+    use_libspotify: bool?
+    settings_dir: str?
+    cache_dir: str?
+    bitrate: int?
+    base_playlist_disable: bool?
+    artist_override: bool?
+    album_override: bool?
+
+  chromecast:
+    - name: str
+      max_volume: int?
+      exclude: bool?
+      nickname: str?
