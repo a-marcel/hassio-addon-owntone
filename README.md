@@ -1,4 +1,4 @@
-# Home Assistant Owntone (known as forked-daapd)
+# Home Assistant Owntone AddOn (known as forked-daapd)
 
 Based on [docker-daapd](https://github.com/linuxserver/docker-daapd), with spotify, chromecast and airplay and enable the possibility to run the Owntone Server - forked daapd - on your Raspberry Pi. The configuration is implemented and will give you the possibility to adjust the Owntone server in Home Assistant by your need. 
 
