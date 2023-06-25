@@ -21,6 +21,6 @@ RUN sed -i -e s#"ipv6 = yes"#"ipv6 = no"#g /etc/owntone.conf.orig \
     && sed -i "/type\ =/ s/#/ /" /etc/owntone.conf.orig \
     && sed -i 's/\(type =\).*/\1 "pulseaudio"/' /etc/owntone.conf.orig
 
-#ADD 90-homeassistant /etc/cont-init.d/90-homeassistant
+ADD 90-homeassistant /etc/cont-init.d/90-homeassistant
 
-#RUN chmod +x /etc/cont-init.d/90-homeassistant
+RUN chmod +x /etc/cont-init.d/90-homeassistant
