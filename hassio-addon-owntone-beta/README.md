@@ -28,6 +28,7 @@ This AddOn will operate in the `/share/owntone` folder that contains a folder na
 | airplay[].permanent || Enable this option to keep a particular AirPlay device in the speaker list and thus ignore mdns notifications about it no longer being present. The speaker will remain until restart of OwnTone. |
 | airplay[].exclude || Enable this option to exclude a particular AirPlay device from the speaker list |
 | airplay[].password || AirPlay password |
+| airplay[].reconnect | `false` | Some devices spuriously disconnect during playback, and based on the device type OwnTone may attempt to reconnect. Setting this option  overrides this so reconnecting is either always enabled or disabled. |
 | airplay[].raop_disable || Disable AirPlay 1 (RAOP) |
 | airplay[].nickname || Name used in the speaker list, overrides name from the device |
 | chromecast | `[]` | Chromecast per device settings  (make sure you get the capitalization of the device name right) |

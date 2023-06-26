@@ -187,6 +187,7 @@ if [ ! -z $AIRPLAY_DEVICES ] && [ "$AIRPLAY_DEVICES" -ge "1" ]; then
 		AIRPLAY_NICKNAME=$(jq -j --raw-output ".airplay[$k] .nickname // empty" $OPTIONS_PATH)
 		AIRPLAY_PASSWORD=$(jq -j --raw-output ".airplay[$k] .password // empty" $OPTIONS_PATH)
 		AIRPLAY_EXCLUDE=$(jq -j --raw-output ".airplay[$k] .exclude // empty" $OPTIONS_PATH)
+		AIRPLAY_RECONNECT=$(jq -j --raw-output ".airplay[$k] .reconnect // empty" $OPTIONS_PATH)
 
 
 		if [ ! -z "$AIRPLAY_NAME" ]; then
@@ -221,6 +222,12 @@ if [ ! -z $AIRPLAY_DEVICES ] && [ "$AIRPLAY_DEVICES" -ge "1" ]; then
 				AIRPLAY_EXCLUDE="exclude = false"
 			fi
 
+			if [ ! -z "$AIRPLAY_RECONNECT" ] && [ "$AIRPLAY_RECONNECT" = "true" ]; then
+				AIRPLAY_RECONNECT="reconnect = true"
+			else
+				AIRPLAY_RECONNECT="reconnect = false"
+			fi
+
 			if [ ! -z "$AIRPLAY_MAX_VOLUME" ] && [ "$AIRPLAY_MAX_VOLUME" -ge "0" ]; then
                                 AIRPLAY_MAX_VOLUME="max_volume = $AIRPLAY_MAX_VOLUME"
                         else
@@ -234,6 +241,7 @@ if [ ! -z $AIRPLAY_DEVICES ] && [ "$AIRPLAY_DEVICES" -ge "1" ]; then
 				$AIRPLAY_PASSWORD
 				$AIRPLAY_RAOP_DISABLE
 				$AIRPLAY_MAX_VOLUME
+				$AIRPLAY_RECONNECT
 			}" >> $CONFIG_PATH
 		fi;
 
