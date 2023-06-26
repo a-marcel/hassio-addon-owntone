@@ -14,21 +14,30 @@ fi
 
 chown -R abc:abc /share/owntone/dbase_and_logs /share/owntone /share/owntone/music
 
+# ugly part
+cp /usr/share/owntone/htdocs/assets/index.js /usr/share/owntone/htdocs/assets/index_changed.js
+sed -i -e "s/e=\"\/stream.mp3\"/e=\"stream.mp3\"/" /usr/share/owntone/htdocs/assets/index_changed.js
+# ugly part - end
+
+
 #chown abc:abc /var/log/owntone.log
 
 IP=$(ifconfig eth0 | grep "inet addr:" | cut -d : -f 2 | cut -d " " -f 1)
 
-echo $IP
-
 OPTIONS_PATH=/data/options.json
-CONFIG_PATH=/etc/owntone.conf.orig
+CONFIG_PATH=/etc/owntone.conf
 
-#cp /etc/owntone.conf.orig $CONFIG_PATH
+cp /etc/owntone.conf.orig $CONFIG_PATH
 
 sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*uid = .*/uid = \"abc\"/" $CONFIG_PATH
 #sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*logfile = .*/logfile = \"\/var\/log\/owntone.log\"/" $CONFIG_PATH
 
-sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*bind_address = .*/bind_address = \"${IP}\"/" $CONFIG_PATH
+sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*db_path = .*/db_path = \"\/share\/owntone\/dbase_and_logs\/songs3.db\"/" $CONFIG_PATH
+
+#sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*bind_address = .*/bind_address = \"${IP}\"/" $CONFIG_PATH
+
+# Change port for local nginx
+#sed -i -e "/^#\?library {$/,/^#\?}$/s/^#\?\s*port = .*/port = 36890/" $CONFIG_PATH
 
 # General
 
@@ -39,6 +48,7 @@ if [ ! -z "$PASSWORD" ]; then
 fi
 
 TRUSTED_NETWORKS=$(jq -j --raw-output '.general.trusted_networks // empty | join("\",\"")' $OPTIONS_PATH)
+
 
 if [ ! -z "$TRUSTED_NETWORKS" ]; then
 	sed -i -e "/^#\?general {$/,/^#\?}$/s/^#\?\s*trusted_networks = .*/trusted_networks = { \"${TRUSTED_NETWORKS}\" }/" $CONFIG_PATH
